@@ -1,0 +1,30 @@
+{
+  "name": "SOD3js",
+  "version": "0.2.0",
+  "authors": [
+    "Alessio Cimarelli <jenkin@dataninja.it>"
+  ],
+  "description": "Progetto didattico per il mini corso su tecnologie web e sviluppo di applicazioni di visualizzazione dati interattive con HTML5, CSS3, d3js e altre librerie open-source.",
+  "main": "index.html",
+  "keywords": [
+    "d3js",
+    "javascript",
+    "opendata",
+    "sod15",
+    "bologna",
+    "dataninja"
+  ],
+  "license": "MIT",
+  "homepage": "http://www.spaghettiopendata.org/content/dashboard-interattive-javascript-con-d3js",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "d3": "~3.5.5"
+  }
+}
