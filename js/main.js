@@ -24,9 +24,55 @@ window.onload = function() {
 	// Anche append() torna una selezione (questa volta "h1", non più "body"), 
 	// per cui è possibile accedere immediatamente al metodo text([string])
 	// sfruttando un pattern di programmazione noto con il nome di chaining. La stringa passata come argomento
-	// ("Hello world!") viene dunque inserita come nodo testo all'interno del nodo selezionato ("h1").
+	// ("Dampyr") viene dunque inserita come nodo testo all'interno del nodo selezionato ("h1").
 	//
 	var titolo = d3.select("body")
 		.append("h1")
-		.text("Hello world!");
+		.text("Dampyr");
+
+	// Abbiamo ora bisogno di dati memorizzati in un file tsv (Tab-separated values),
+	// per cui dobbiamo recuperarli con una chiamata AJAX. Il metodo tsv([url], callback) di d3
+	// pensa a tutto: chiamata asincrona, gestione della risposta (evetuali errori in "error" e parsing dei dati testuali
+	// dal tsv a un array di oggetti (passato in "data").
+	// 
+	d3.tsv("data/Bonelli-Collezione-Dampyr-Marzo-2015.tsv", function(error, data) {
+
+		// Gestione di eventuali errori (es. file non trovato, ecc.),
+		// se c'è qualche problema l'esecuzione si blocca e viene notificato un messaggio in console.
+		if (error) {
+			throw "Error in loading data...";
+		}
+
+		// Qui uno dei pilastri concettuali della libreria d3:
+		// selezioniamo il "body" come prima, poi selezioniamo tutti gli elementi "p"
+		// in esso contenuti con il metodo selectAll([selettore]). 
+		// Inizialmente non ce ne sono, quindi la selezione è vuota, ma esiste.
+		//
+		// A questa selezione (vuota) associamo il nostro array per posizione con il metodo data([array]): 
+		// il primo oggetto con il primo paragrafo (che non esiste), 
+		// il secondo oggetto con il secondo paragrafo (che sempre non esiste), ecc.
+		//
+		// Il metodo enter() opera la magia: esegue tutto ciò che viene dopo tante volte quanti sono i dati
+		// che non sono stati assegnati ad alcun elemento del DOM, nel nostro caso tutti. Per cui append("p")
+		// viene eseguito per tutti i dati e così vengono creati nel DOM tanti paragrafi quanti sono i dati
+		// e a essi vengono associati in ordine i dati uno a uno.
+		//
+		// Il metodo append("p") torna una selezione, per cui possiamo subito impostare il testo dei paragrafi,
+		// che non è fisso, ma dipende dai dati: la funzione di callback, infatti, viene eseguita passandole
+		// il dato associato all'elemento corrente: "d" è un oggetto che rappresenta una riga del dataset originario
+		// (una riga del file tsv), con le chiavi uguali ai nomi delle colonne e i valori quelli delle celle della riga.
+		//
+		// Questa funzione di callback deve ritornare un valore compatibile con il metodo che l'ha chiamata: nel nostro caso
+		// una stringa da inserire all'interno del paragrafo appena creato.
+		//
+		var titoli_albi = d3.select("body") // Selezione del body (che esiste)
+			.selectAll("p") // Selezione di tutti i paragrafi figli (che non esistono)
+			.data(data) // Associazione dei dati ai paragrafi (che ancora non esistono)
+			.enter() // Entriamo e agiamo nella selezione vuota in base ai dati associati...
+			.append("p") // Creazione di un paragrafo per ogni riga del dataset originario
+			.text(function(d) { // Al nuovo paragrafo è associata una riga del dataset, in ordine
+				return d["Titolo"]; // Scriviamo all'interno del paragrafo il contenuto della colonna "Titolo"
+			});
+
+	});
 };
