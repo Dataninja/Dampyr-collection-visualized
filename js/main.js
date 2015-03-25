@@ -65,13 +65,62 @@ window.onload = function() {
 		// Questa funzione di callback deve ritornare un valore compatibile con il metodo che l'ha chiamata: nel nostro caso
 		// una stringa da inserire all'interno del paragrafo appena creato.
 		//
-		var titoli_albi = d3.select("body") // Selezione del body (che esiste)
+		/*
+		 * var titoli_albi = d3.select("body") // Selezione del body (che esiste)
 			.selectAll("p") // Selezione di tutti i paragrafi figli (che non esistono)
 			.data(data) // Associazione dei dati ai paragrafi (che ancora non esistono)
 			.enter() // Entriamo e agiamo nella selezione vuota in base ai dati associati...
 			.append("p") // Creazione di un paragrafo per ogni riga del dataset originario
 			.text(function(d) { // Al nuovo paragrafo è associata una riga del dataset, in ordine
 				return d["Titolo"]; // Scriviamo all'interno del paragrafo il contenuto della colonna "Titolo"
+			});
+		 */
+
+		// Rendiamo più accattivante la pagina mostrando quattro elementi per ogni albo:
+		// il numero, il titolo, la copertina e la data di uscita nelle edicole.
+		//
+		// Assicuriamoci poi che tutto sia ordinato per numero di albo (e quindi per data di uscita)
+		// e per ora limitiamoci ai primi 20 albi per non sovraccaricare di richieste il server della Bonelli
+		// (le immagini sono linkate direttamente dal sito ufficiale).
+		//
+		var albi = d3.select("body") // La selezione dei "div" contenitori viene assegnata alla variabile "albi" e poi riutilizzata successivamente.
+			.selectAll("div")
+			.data(data.sort(function(a,b) { // Il metodo sort() passa alla callback una coppia di elementi
+				// Bisogna indicare dei due elementi quale viene prima e quale dopo,
+				// in questo ci aiuta un metodo di d3 già predisposto allo scopo per semplici ordinamenti.
+				// 
+				// Ovviamente dobbiamo confrontare il valore degli attributi "Numero" degli oggetti "a" e "b" e non gli oggetti in sé
+				// e prima di farlo li convertiamo a interi (inizialmente sono letti come stringhe) anteponendo un "+".
+				return d3.ascending(+a["Numero"],+b["Numero"]); 
+			}).slice(0,20)) // Il metodo slice() applicato a un array prende 20 elementi consecutivi a partire dal numero 0 (il primo)
+			.enter()
+			.append("div");
+		// Da qui in poi tutti gli elementi vanno creati all'interno dei div contenitori creati precedentemente.
+		// La variabile "albi" è un array e tutti i metodi invocati si applicano a tutti gli elementi dell'array.
+		// Noi lo scriviamo una sola volta, ma il tutto è eseguito per tutti gli elementi, tanti quanti sono i dati.
+		albi.append("p") 
+			.text(function(d) {
+				return "Dampyr n. "+d["Numero"]; // Concatenazione di stringhe, sempre con il "+".
+			});
+
+		albi.append("h2") // Titolo di secondo livello, sempre figlio del div, ma fratello del paragrafo precedente
+			.text(function(d) {
+				return d["Titolo"];
+			});
+
+		albi.append("a") // Questa volta inseriamo nel DOM un link alla scheda dell'albo sul sito ufficiale
+			.attr("href", function(d) { // L'URL del link va inserita nell'attributo "href" mediante il metodo "attr"
+				return d["Scheda"];
+			})
+			.attr("target","_blank") // Il link si apre in un'altra finestra
+			.append("img") // Ora l'append è consecutivo al precedente, quindi agisce su "a" (non su "div"), inserendo al suo interno un'immagine
+			.attr("src", function(d) { // La sua URL va inserita nell'attributo "src" mediante il metodo "attr"
+				return d["Copertina"];
+			});
+
+		albi.append("p")
+			.text(function(d) {
+				return "Uscito il "+d["Data di uscita"];
 			});
 
 	});
