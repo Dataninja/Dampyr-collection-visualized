@@ -1,0 +1,33 @@
+/*
+ * Codice css per l'applicazione
+ */
+
+.header h1 img {
+	background-color: white;
+	border-radius: 5px;
+	border-top-left-radius: 50px;
+	border-top-right-radius: 50px;
+}
+
+.body {
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+
+.comics-container {
+	padding: 5px;
+	text-align: center;
+}
+
+.comics {
+	border: 1px solid #ccc;
+}
+
+img.cover {
+	max-height: 253px;
+}
+
+.footer,
+.header {
+	background-color: #3d85b7;
+}
