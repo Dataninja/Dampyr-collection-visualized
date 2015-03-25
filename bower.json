@@ -25,6 +25,7 @@
     "tests"
   ],
   "dependencies": {
-    "d3": "~3.5.5"
+    "d3": "~3.5.5",
+    "bootstrap": "~3.3.4"
   }
 }
