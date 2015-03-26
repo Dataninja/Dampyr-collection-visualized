@@ -6,11 +6,11 @@
 // è l'header della pagina, all'interno del tag <head>. Ma effettuare subito operazioni sul DOM all'interno
 // del tag <body> prima ancora che sia caricato interamente non è una buona idea...
 // 
-// Inseriamo quindi tutto il codice in una funzione di callback e l'assegnamo al metodo onload dell'oggetto window.
+// Inseriamo quindi tutto il codice in una funzione di callback e passiamola come argomento alla funzione speciale di jQuery, "$()".
 // La nostra funzione sarà così eseguita automaticamente non appena il caricamento della pagina sarà completato
 // e il DOM pronto per essere manipolato.
 //
-window.onload = function() {
+$(function() {
 
 	// La libreria d3 espone un oggetto accessibile globalmente: d3.
 	// L'uso della libreria d3 richiede quindi l'esecuzione opportuna dei metodi dell'oggetto d3.
@@ -33,9 +33,10 @@ window.onload = function() {
 		.attr("class","container-fluid");
 
 	// Inseriamo il titolo in un contenitore che funga da "header" con classe "row", sempre per sfruttare bootstrap.
-	container.append("header") // Definiamo semanticamente le parti della pagina con i nuovi tag dell'HTML5
-		.attr("class","row page-header")
-		.append("figure") // HTML5
+	var header = container.append("header") // Definiamo semanticamente le parti della pagina con i nuovi tag dell'HTML5
+		.attr("class","row page-header");
+		
+	header.append("figure") // HTML5
 		.append("a") // Figlio di "h1"
 		.attr("href","http://www.sergiobonelli.it/sezioni/18/dampyr")
 		.attr("target","_blank")
@@ -43,6 +44,14 @@ window.onload = function() {
 		.attr("class","img-responsive center-block")
 		.attr("src","http://www.sergiobonelli.it/images/personaggi/principali/dampyr_personaggio.png")
 		.attr("alt","Dampyr");
+
+	// Rendiamo il tutto ricercabile mediante shufflejs attraverso un campo di input testuale
+	header.append("nav")
+		.append("input")
+		.attr("id","search")
+		.attr("class","center-block input-lg")
+		.attr("placeholder","Cerca per autore...")
+		.attr("value","");
 
 	// Abbiamo ora bisogno di dati memorizzati in un file tsv (Tab-separated values),
 	// per cui dobbiamo recuperarli con una chiamata AJAX. Il metodo tsv([url], callback) di d3
@@ -84,7 +93,8 @@ window.onload = function() {
 		// (le immagini sono linkate direttamente dal sito ufficiale).
 		//
 		var albi = container.append("section")
-			.attr("class","row page-body") // Dopo l'header, un altra "row", ma con classe "body"
+			.attr("id","grid")
+			.attr("class","row page-body") // Dopo l'header, un'altra "row", ma con classe "body"
 			.selectAll("div") // La selezione dei "div" contenitori viene assegnata alla variabile "albi" e poi riutilizzata successivamente.	
 			.data(data.sort(function(a,b) { // Il metodo sort() passa alla callback una coppia di elementi
 				// Bisogna indicare dei due elementi quale viene prima e quale dopo,
@@ -97,6 +107,19 @@ window.onload = function() {
 			.enter()
 			.append("div")
 			.attr("class","comics-container col-lg-2 col-md-3 col-sm-4 col-xs-6") // Associamo una classe ai div contenitori degli albi per sfruttare la grid di bootstrap che ci assicura la responsiveness
+			.attr("data-groups", function(d) { // Shufflejs effettua il filtro su categorie personalizzate che vanno definite nell'attributo data-groups
+				var groups = [];
+				// Nel nostro caso le categorie sono i nomi degli autori e devono comparire come json di un array di stringhe: ["nome1","nome2",...]
+				// Sappiamo però che nelle nostre colonne ci possono essere più nomi, che divideremo in un array con split() usando la virgola come separatore.
+				// Non possiamo tornare però un array, perché l'attributo si aspetta una stringa, per cui... stringify!
+				return JSON.stringify(groups.concat(d["Soggetto"].split(",")).concat(d["Sceneggiatura"].split(",")).concat(d["Disegni"].split(",")).concat(d["Copertina"].split(","))).replace(/"/g,"'");
+			})
+			.attr("data-title", function(d) { // Perché allora non inserire tutte e informazioni negli attributi data-?
+				return d["Titolo"].replace(/"/g,"");
+			})
+			.attr("data-summary", function(d) {
+				return d["Sinossi"].replace(/"/g,"");
+			})
 			.append("article") // Perché due div uno dentro l'altro? Perché vogliamo il bordo di ogni elemento e una certa distanza tra l'uno e l'altro
 			.attr("class","comics");
 		
@@ -151,5 +174,27 @@ window.onload = function() {
 			.attr("src","http://www.sergiobonelli.it/images/sergio_bonelli_editore.png")
 			.attr("alt","Sergio Bonelli Editore");
 
+		//
+		// Il DOM è pronto con tutti gli elementi
+		// Ora possiamo agire su quegli elementi, inizializzando la grid dei comics con shufflejs
+		//
+		$("#grid").shuffle({
+			itemSelector: ".comics-container"
+		});
+
+		// Attacchiamo una funzione di callback a un evento del form di input: viene eseguita ogni volta che il contenuto cambia
+		// a causa della digitazione di un testo all'interno da parte dell'utente
+		$("#search").on('keyup change', function() { // Eventi "rilascio di un pulsante della tastiera" e "cambio del contenuto"
+			// Effettuando una ricerca in data-groups è necessario ripulire un po' sia le stringa di ricerca
+			// (ignorando per esempio le maiuscole e altri caratteri non letterali) che quella in cui viene effettuata
+			// la ricerca (che è il json di un array di stringhe)
+			var val = this.value.toLowerCase().replace(/[^a-z]/g,""); // Il valore digitato corrente
+			$('#grid').shuffle('shuffle', function($el, shuffle) {
+				// La funzione viene valutata per ogni elemento della grid:
+				// se vera l'elemento viene tenuto, altrimenti viene nascosto
+			 	return $el.data('groups').toLowerCase().indexOf(val) > -1;
+			});
+		});
+
 	});
-};
+});

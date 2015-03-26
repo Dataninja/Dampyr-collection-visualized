@@ -14,6 +14,10 @@ header.page-header img {
 	border-top-right-radius: 50px;
 }
 
+header.page-header nav {
+	margin-top: 15px;
+}
+
 section.page-body {
 	margin-top: 20px;
 	margin-bottom: 20px;
@@ -22,6 +26,7 @@ section.page-body {
 div.comics-container {
 	padding: 5px;
 	text-align: center;
+	height: 350px;
 }
 
 article.comics {
