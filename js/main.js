@@ -66,6 +66,31 @@ $(function() {
 			throw "Error in loading data...";
 		}
 
+		// Assicuriamoci che tutto sia ordinato per numero di albo (e quindi per data di uscita)
+		// e per ora limitiamoci ai primi 20 albi per non sovraccaricare di richieste il server della Bonelli
+		// (le immagini sono linkate direttamente dal sito ufficiale).
+		//
+		data = data.sort(function(a,b) { // Il metodo sort() passa alla callback una coppia di elementi
+				// Bisogna indicare dei due elementi quale viene prima e quale dopo,
+				// in questo ci aiuta un metodo di d3 già predisposto allo scopo per semplici ordinamenti.
+				// 
+				// Ovviamente dobbiamo confrontare il valore degli attributi "Numero" degli oggetti "a" e "b" e non gli oggetti in sé
+				// e prima di farlo li convertiamo a interi (inizialmente sono letti come stringhe) anteponendo un "+".
+				return d3.ascending(+a["Numero"],+b["Numero"]); 
+			}).slice(0,20); // Il metodo slice() applicato a un array prende 20 elementi consecutivi a partire dal numero 0 (il primo)
+
+		// Per aggiungere la funzionalità di autocomplete al form di ricerca,
+		// ricaviamo la lista dei nomi di tutti gli autori degli albi.
+		// Soggetto        Sceneggiatura   Disegni Copertina
+		var authors = _.uniq(_.flatten(data.map(function(el) { 
+				var groups = [];
+				return groups
+					.concat(el["Soggetto"].split(","))
+					.concat(el["Sceneggiatura"].split(","))
+					.concat(el["Disegni"].split(","))
+					.concat(el["Copertina"].split(","));
+			})));
+
 		// Qui uno dei pilastri concettuali della libreria d3:
 		// prendiamo la variabile container (è una selezione del div contenitore globale), poi selezioniamo tutti gli elementi "div"
 		// in esso contenuti con il metodo selectAll([selettore]). 
@@ -88,22 +113,11 @@ $(function() {
 		// Questa funzione di callback deve ritornare un valore compatibile con il metodo che l'ha chiamata: nel nostro caso
 		// per lo più stringhe con cui valorizzare gli attributi nominati.
 		//
-		// Assicuriamoci poi che tutto sia ordinato per numero di albo (e quindi per data di uscita)
-		// e per ora limitiamoci ai primi 20 albi per non sovraccaricare di richieste il server della Bonelli
-		// (le immagini sono linkate direttamente dal sito ufficiale).
-		//
 		var albi = container.append("section")
 			.attr("id","grid")
 			.attr("class","row page-body") // Dopo l'header, un'altra "row", ma con classe "body"
 			.selectAll("div") // La selezione dei "div" contenitori viene assegnata alla variabile "albi" e poi riutilizzata successivamente.	
-			.data(data.sort(function(a,b) { // Il metodo sort() passa alla callback una coppia di elementi
-				// Bisogna indicare dei due elementi quale viene prima e quale dopo,
-				// in questo ci aiuta un metodo di d3 già predisposto allo scopo per semplici ordinamenti.
-				// 
-				// Ovviamente dobbiamo confrontare il valore degli attributi "Numero" degli oggetti "a" e "b" e non gli oggetti in sé
-				// e prima di farlo li convertiamo a interi (inizialmente sono letti come stringhe) anteponendo un "+".
-				return d3.ascending(+a["Numero"],+b["Numero"]); 
-			}).slice(0,20)) // Il metodo slice() applicato a un array prende 20 elementi consecutivi a partire dal numero 0 (il primo)
+			.data(data)
 			.enter()
 			.append("div")
 			.attr("class","comics-container col-lg-2 col-md-3 col-sm-4 col-xs-6") // Associamo una classe ai div contenitori degli albi per sfruttare la grid di bootstrap che ci assicura la responsiveness
@@ -111,8 +125,9 @@ $(function() {
 				var groups = [];
 				// Nel nostro caso le categorie sono i nomi degli autori e devono comparire come json di un array di stringhe: ["nome1","nome2",...]
 				// Sappiamo però che nelle nostre colonne ci possono essere più nomi, che divideremo in un array con split() usando la virgola come separatore.
-				// Non possiamo tornare però un array, perché l'attributo si aspetta una stringa, per cui... stringify!
-				return JSON.stringify(groups.concat(d["Soggetto"].split(",")).concat(d["Sceneggiatura"].split(",")).concat(d["Disegni"].split(",")).concat(d["Copertina"].split(","))).replace(/"/g,"'");
+				// Non possiamo tornare però un array, perché l'attributo si aspetta una stringa, per cui... stringify, non prima di aver eliminato dall'array
+				// gli elementi duplicati.
+				return JSON.stringify(_.uniq(groups.concat(d["Soggetto"].split(",")).concat(d["Sceneggiatura"].split(",")).concat(d["Disegni"].split(",")).concat(d["Copertina"].split(",")))).replace(/"/g,"'");
 			})
 			.attr("data-title", function(d) { // Perché allora non inserire tutte e informazioni negli attributi data-?
 				return d["Titolo"].replace(/"/g,"");
@@ -188,12 +203,16 @@ $(function() {
 			// Effettuando una ricerca in data-groups è necessario ripulire un po' sia le stringa di ricerca
 			// (ignorando per esempio le maiuscole e altri caratteri non letterali) che quella in cui viene effettuata
 			// la ricerca (che è il json di un array di stringhe)
-			var val = this.value.toLowerCase().replace(/[^a-z]/g,""); // Il valore digitato corrente
+			var val = this.value.toLowerCase().replace(/[^a-z] /g,""); // Il valore digitato corrente
 			$('#grid').shuffle('shuffle', function($el, shuffle) {
 				// La funzione viene valutata per ogni elemento della grid:
 				// se vera l'elemento viene tenuto, altrimenti viene nascosto
 			 	return $el.data('groups').toLowerCase().indexOf(val) > -1;
 			});
+		});
+
+		$("#search").autocomplete({
+			source: authors
 		});
 
 	});
