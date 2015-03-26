@@ -22,6 +22,7 @@ section.page-body {
 div.comics-container {
 	padding: 5px;
 	text-align: center;
+	height: 350px;
 }
 
 article.comics {
