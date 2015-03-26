@@ -33,9 +33,9 @@ window.onload = function() {
 		.attr("class","container-fluid");
 
 	// Inseriamo il titolo in un contenitore che funga da "header" con classe "row", sempre per sfruttare bootstrap.
-	container.append("div")
-		.attr("class","row header")
-		.append("h1") // Inserito come figlio del div precedente
+	container.append("header") // Definiamo semanticamente le parti della pagina con i nuovi tag dell'HTML5
+		.attr("class","row page-header")
+		.append("figure") // HTML5
 		.append("a") // Figlio di "h1"
 		.attr("href","http://www.sergiobonelli.it/sezioni/18/dampyr")
 		.attr("target","_blank")
@@ -83,8 +83,8 @@ window.onload = function() {
 		// e per ora limitiamoci ai primi 20 albi per non sovraccaricare di richieste il server della Bonelli
 		// (le immagini sono linkate direttamente dal sito ufficiale).
 		//
-		var albi = container.append("div")
-			.attr("class","row body") // Dopo l'header, un altra "row", ma con classe "body"
+		var albi = container.append("section")
+			.attr("class","row page-body") // Dopo l'header, un altra "row", ma con classe "body"
 			.selectAll("div") // La selezione dei "div" contenitori viene assegnata alla variabile "albi" e poi riutilizzata successivamente.	
 			.data(data.sort(function(a,b) { // Il metodo sort() passa alla callback una coppia di elementi
 				// Bisogna indicare dei due elementi quale viene prima e quale dopo,
@@ -97,25 +97,28 @@ window.onload = function() {
 			.enter()
 			.append("div")
 			.attr("class","comics-container col-lg-2 col-md-3 col-sm-4 col-xs-6") // Associamo una classe ai div contenitori degli albi per sfruttare la grid di bootstrap che ci assicura la responsiveness
-			.append("div") // Perché due div uno dentro l'altro? Perché vogliamo il bordo di ogni elemento e una certa distanza tra l'uno e l'altro
+			.append("article") // Perché due div uno dentro l'altro? Perché vogliamo il bordo di ogni elemento e una certa distanza tra l'uno e l'altro
 			.attr("class","comics");
 		
 		// Da qui in poi tutti gli elementi vanno creati all'interno dei div contenitori creati precedentemente.
 		// La variabile "albi" è un array e tutti i metodi invocati si applicano a tutti gli elementi dell'array.
 		// Noi lo scriviamo una sola volta, ma il tutto è eseguito per tutti gli elementi, tanti quanti sono i dati.
-		albi.append("p")
+		var header_albi = albi.append("header");
+		
+		header_albi.append("p")
 			.attr("class","number")
 			.text(function(d) {
 				return "Dampyr n. "+d["Numero"]; // Concatenazione di stringhe, sempre con il "+".
 			});
 
-		albi.append("h4") // Titolo di quarto livello, sempre figlio del div, ma fratello del paragrafo precedente
+		header_albi.append("h4") // Titolo di quarto livello, sempre figlio del div, ma fratello del paragrafo precedente
 			.attr("class","title")
 			.text(function(d) {
 				return d["Titolo"];
 			});
 
-		albi.append("a") // Questa volta inseriamo nel DOM un link alla scheda dell'albo sul sito ufficiale
+		albi.append("figure")
+			.append("a") // Questa volta inseriamo nel DOM un link alla scheda dell'albo sul sito ufficiale
 			.attr("href", function(d) { // L'URL del link va inserita nell'attributo "href" mediante il metodo "attr"
 				return d["Scheda"];
 			})
@@ -129,15 +132,17 @@ window.onload = function() {
 				return d["Titolo"];
 			});
 
-		albi.append("p")
+		albi.append("footer")
+			.append("p")
 			.attr("class","date")
 			.text(function(d) {
 				return "Uscito il "+d["Data di uscita"];
 			});
 
-		// E infine un footer a chiudere
-		container.append("div")
-			.attr("class","row footer")
+		// E infine un footer a chiudere la pagina
+		container.append("footer")
+			.attr("class","row page-footer")
+			.append("figure")
 			.append("a")
 			.attr("href","http://www.sergiobonelli.it/")
 			.attr("target","_blank")
