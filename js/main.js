@@ -126,7 +126,7 @@ window.onload = function() {
 			.append("img") // Ora l'append è consecutivo al precedente, quindi agisce su "a" (non su "div"), inserendo al suo interno un'immagine
 			.attr("class","cover img-responsive center-block") // Associamo la classe "cover" e alcune classi utili definite da bootstrap
 			.attr("src", function(d) { // La sua URL va inserita nell'attributo "src" mediante il metodo "attr"
-				return d["Copertina"];
+				return d["Immagine"];
 			})
 			.attr("alt", function(d) {
 				return d["Titolo"];
