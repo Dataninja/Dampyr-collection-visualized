@@ -158,9 +158,14 @@ $(function() {
 		albi.append("figure")
 			.append("a") // Questa volta inseriamo nel DOM un link alla scheda dell'albo sul sito ufficiale
 			.attr("href", function(d) { // L'URL del link va inserita nell'attributo "href" mediante il metodo "attr"
-				return d["Scheda"];
+				return d["Immagine"];
+				//return d["Scheda"];
 			})
 			.attr("target","_blank") // Il link si apre in un'altra finestra
+			.attr("data-lightbox","cover")
+			.attr("data-title", function(d) {
+				return d["Sinossi"].replace(/"/g,"");
+			})
 			.append("img") // Ora l'append è consecutivo al precedente, quindi agisce su "a" (non su "div"), inserendo al suo interno un'immagine
 			.attr("class","cover img-responsive center-block") // Associamo la classe "cover" e alcune classi utili definite da bootstrap
 			.attr("src", function(d) { // La sua URL va inserita nell'attributo "src" mediante il metodo "attr"
@@ -173,8 +178,8 @@ $(function() {
 		albi.append("footer")
 			.append("p")
 			.attr("class","date")
-			.text(function(d) {
-				return "Uscito il "+d["Data di uscita"];
+			.html(function(d) {
+				return 'Uscito il <a href="'+d["Scheda"]+'" target="_blank">'+d["Data di uscita"]+'</a>';
 			});
 
 		// E infine un footer a chiudere la pagina
