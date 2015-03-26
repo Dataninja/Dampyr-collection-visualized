@@ -33,9 +33,10 @@ $(function() {
 		.attr("class","container-fluid");
 
 	// Inseriamo il titolo in un contenitore che funga da "header" con classe "row", sempre per sfruttare bootstrap.
-	container.append("header") // Definiamo semanticamente le parti della pagina con i nuovi tag dell'HTML5
-		.attr("class","row page-header")
-		.append("figure") // HTML5
+	var header = container.append("header") // Definiamo semanticamente le parti della pagina con i nuovi tag dell'HTML5
+		.attr("class","row page-header");
+		
+	header.append("figure") // HTML5
 		.append("a") // Figlio di "h1"
 		.attr("href","http://www.sergiobonelli.it/sezioni/18/dampyr")
 		.attr("target","_blank")
@@ -43,6 +44,14 @@ $(function() {
 		.attr("class","img-responsive center-block")
 		.attr("src","http://www.sergiobonelli.it/images/personaggi/principali/dampyr_personaggio.png")
 		.attr("alt","Dampyr");
+
+	// Rendiamo il tutto ricercabile mediante shufflejs attraverso un campo di input testuale
+	header.append("nav")
+		.append("input")
+		.attr("id","search")
+		.attr("class","center-block input-lg")
+		.attr("placeholder","Cerca per autore...")
+		.attr("value","");
 
 	// Abbiamo ora bisogno di dati memorizzati in un file tsv (Tab-separated values),
 	// per cui dobbiamo recuperarli con una chiamata AJAX. Il metodo tsv([url], callback) di d3
@@ -171,6 +180,20 @@ $(function() {
 		//
 		$("#grid").shuffle({
 			itemSelector: ".comics-container"
+		});
+
+		// Attacchiamo una funzione di callback a un evento del form di input: viene eseguita ogni volta che il contenuto cambia
+		// a causa della digitazione di un testo all'interno da parte dell'utente
+		$("#search").on('keyup change', function() { // Eventi "rilascio di un pulsante della tastiera" e "cambio del contenuto"
+			// Effettuando una ricerca in data-groups è necessario ripulire un po' sia le stringa di ricerca
+			// (ignorando per esempio le maiuscole e altri caratteri non letterali) che quella in cui viene effettuata
+			// la ricerca (che è il json di un array di stringhe)
+			var val = this.value.toLowerCase().replace(/[^a-z]/g,""); // Il valore digitato corrente
+			$('#grid').shuffle('shuffle', function($el, shuffle) {
+				// La funzione viene valutata per ogni elemento della grid:
+				// se vera l'elemento viene tenuto, altrimenti viene nascosto
+			 	return $el.data('groups').toLowerCase().indexOf(val) > -1;
+			});
 		});
 
 	});
