@@ -77,7 +77,7 @@ $(function() {
 				// Ovviamente dobbiamo confrontare il valore degli attributi "Numero" degli oggetti "a" e "b" e non gli oggetti in sé
 				// e prima di farlo li convertiamo a interi (inizialmente sono letti come stringhe) anteponendo un "+".
 				return d3.ascending(+a["Numero"],+b["Numero"]); 
-			}).slice(0,20); // Il metodo slice() applicato a un array prende 20 elementi consecutivi a partire dal numero 0 (il primo)
+			}).slice(0,25); // Il metodo slice() applicato a un array prende 20 elementi consecutivi a partire dal numero 0 (il primo)
 
 		// Per aggiungere la funzionalità di autocomplete al form di ricerca,
 		// ricaviamo la lista dei nomi di tutti gli autori degli albi.
@@ -90,6 +90,61 @@ $(function() {
 					.concat(el["Disegni"].split(","))
 					.concat(el["Copertina"].split(","));
 			})));
+
+
+		// Aggiungiamo una timeline in testa alla grid che mostri una timeline delle uscite,
+		// anno per anno: un cerchio per ogni anno, con raggio proporzionale al numero di albi per anno,
+		// che reagisca al filtro dell'utente, in modo da mostrare l'apporto annuale degli autori alla serie.
+		// 
+		var timeline = container.append("section")
+			.attr("id","timeline")
+			.attr("class","row page-viz");
+
+		var width = $("#timeline").width(),
+			height = 125,
+			margin = { top: 10, right: 10, bottom: 10, left: 10 };
+				
+		var svg = timeline.append("svg")
+			.attr("width", width)
+			.attr("height", height)
+			.append("g")
+			.attr("transform","translate("+margin.left+","+margin.top+")");
+
+		var years = _.uniq(data.map(function(el) { var date = new Date(el["Data di uscita"]); return date.getFullYear(); })),
+			pivot = _.pairs(_.reduce(data, function(m,n) { 
+				var date = new Date(n["Data di uscita"]);
+				m[date.getFullYear()]++;
+				return m;
+			}, _.object(years.map(function(el) { return [el,0]; }))));
+
+		var x = d3.scale.ordinal()
+			.domain(years)
+			.rangePoints([0,width-margin.right],1.0);
+
+		var r = d3.scale.linear()
+			.range([5,d3.min([width/years.length/2,height/3-margin.top])])
+			.domain([0,Math.sqrt(data.length/years.length)]);
+
+		svg.selectAll("circle")
+			.data(pivot)
+			.enter()
+			.append("circle")
+			.attr("cx", function(d) {
+				return x(+d[0]);
+			})
+			.attr("cy", height/3)
+			.attr("r", function(d) {
+				return r(Math.sqrt(d[1]));
+			})
+			.append("title")
+			.text(function(d) {
+				return d[0]+": "+d[1];
+			});
+
+		svg.append("g")
+			.attr("transform","translate(0,"+(height/2-margin.bottom)+")")
+			.attr("class","x axis")
+			.call(d3.svg.axis().scale(x).innerTickSize(height/2-2*margin.bottom));
 
 		// Qui uno dei pilastri concettuali della libreria d3:
 		// prendiamo la variabile container (è una selezione del div contenitore globale), poi selezioniamo tutti gli elementi "div"

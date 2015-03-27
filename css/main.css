@@ -41,3 +41,24 @@ footer.page-footer,
 header.page-header {
 	background-color: #3d85b7;
 }
+
+.axis {
+	shape-rendering: crispEdges;
+}
+
+.x.axis line {
+	stroke: #3d85b7;
+}
+
+.x.axis text {
+	fill: #3d85b7;
+}
+
+.x.axis path {
+	display: none;
+}
+
+circle {
+	stroke: #3d85b7;
+	fill: #3d85b7;
+}
