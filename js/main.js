@@ -66,6 +66,11 @@ $(function() {
 			throw "Error in loading data...";
 		}
 
+		data.forEach(function(el) {
+			var date = new Date(el["Data di uscita"]);
+			el.year = date.getFullYear(); 
+		});
+
 		// Assicuriamoci che tutto sia ordinato per numero di albo (e quindi per data di uscita)
 		// e per ora limitiamoci ai primi 20 albi per non sovraccaricare di richieste il server della Bonelli
 		// (le immagini sono linkate direttamente dal sito ufficiale).
@@ -77,7 +82,7 @@ $(function() {
 				// Ovviamente dobbiamo confrontare il valore degli attributi "Numero" degli oggetti "a" e "b" e non gli oggetti in sé
 				// e prima di farlo li convertiamo a interi (inizialmente sono letti come stringhe) anteponendo un "+".
 				return d3.ascending(+a["Numero"],+b["Numero"]); 
-			}).slice(0,25); // Il metodo slice() applicato a un array prende 20 elementi consecutivi a partire dal numero 0 (il primo)
+			});//.slice(0,50); // Il metodo slice() applicato a un array prende 20 elementi consecutivi a partire dal numero 0 (il primo)
 
 		// Per aggiungere la funzionalità di autocomplete al form di ricerca,
 		// ricaviamo la lista dei nomi di tutti gli autori degli albi.
@@ -110,10 +115,9 @@ $(function() {
 			.append("g")
 			.attr("transform","translate("+margin.left+","+margin.top+")");
 
-		var years = _.uniq(data.map(function(el) { var date = new Date(el["Data di uscita"]); return date.getFullYear(); })),
+		var years = _.uniq(data.map(function(el) { return el.year; })),
 			pivot = _.pairs(_.reduce(data, function(m,n) { 
-				var date = new Date(n["Data di uscita"]);
-				m[date.getFullYear()]++;
+				m[n.year]++;
 				return m;
 			}, _.object(years.map(function(el) { return [el,0]; }))));
 
@@ -260,6 +264,7 @@ $(function() {
 		// Attacchiamo una funzione di callback a un evento del form di input: viene eseguita ogni volta che il contenuto cambia
 		// a causa della digitazione di un testo all'interno da parte dell'utente
 		$("#search").on('keyup change', function() { // Eventi "rilascio di un pulsante della tastiera" e "cambio del contenuto"
+			
 			// Effettuando una ricerca in data-groups è necessario ripulire un po' sia le stringa di ricerca
 			// (ignorando per esempio le maiuscole e altri caratteri non letterali) che quella in cui viene effettuata
 			// la ricerca (che è il json di un array di stringhe)
@@ -269,6 +274,29 @@ $(function() {
 				// se vera l'elemento viene tenuto, altrimenti viene nascosto
 			 	return $el.data('groups').toLowerCase().indexOf(val) > -1;
 			});
+
+			var pivot = _.pairs(_.reduce(d3.selectAll(".comics-container.filtered").data(), function(m,n) { 
+					m[n.year]++;
+					return m;
+				}, _.object(years.map(function(el) { return [el,0]; }))));
+
+			var elements = svg.selectAll("circle")
+				.data(pivot, function(d) { return d[0]; });
+				
+			elements
+				.transition()
+				.attr("r", function(d) {
+					return r(Math.sqrt(d[1]));
+				})
+				
+			elements.select("title")
+				.text(function(d) {
+					return d[0]+": "+d[1];
+				});
+
+			elements.exit()
+				.transition()
+				.attr("r",r(0));
 		});
 
 		$("#search").autocomplete({
